@@ -23,10 +23,12 @@ accuracy from near-zero cold accuracy**.
 | `gpt-5.4-mini` | 0.244 | 0.976 | **0.977** | 0.992 |
 
 - **cold** — no memory, parametric knowledge only — is the floor.
+- **warm** — `materialize_context`, a recency snapshot of the stream — flmnt's snapshot
+  retrieval tier.
+- **rlm** — `query_context`, flmnt's query-driven deep retrieval — sits on the oracle ceiling
+  and roughly 5–10× above the cold floor on every pack. That gap is flmnt's isolated contribution.
 - **oracle** — the correct decisions injected directly — is the ceiling, and proves the answer
   is actually in the stream.
-- **rlm** — flmnt's query-driven deep retrieval — sits on the oracle ceiling and roughly
-  5–10× above the cold floor on every pack. That gap is flmnt's isolated contribution.
 
 See [`METHODOLOGY.md`](METHODOLOGY.md) for the four-arm design and
 [`data/latest.jsonl`](data/latest.jsonl) for every per-probe score.
