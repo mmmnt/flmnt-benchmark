@@ -1,0 +1,102 @@
+# Methodology
+
+This document defines exactly how the flmnt benchmark is built, run, and scored — so every
+number in [`data/latest.jsonl`](data/latest.jsonl) can be understood and audited independently.
+The complete inputs (every seeded decision and every probe question) are in
+[`CORPUS.md`](CORPUS.md); the verbatim grading rubric is in [`SCORING.md`](SCORING.md).
+
+## 1. What the benchmark measures
+
+flmnt is a persistent memory layer for AI agents — recorded project decisions, retrieved on
+demand. The benchmark answers one question: **does retrieving those decisions change what a
+model can correctly answer?**
+
+Each pack seeds a corpus of recorded decisions into an event stream, then asks the model a set
+of probe questions. We compare the model answering *with* retrieval against the same model
+answering *without* it, and against the theoretical ceiling.
+
+## 2. Experimental design — four arms
+
+Every probe runs across four independent arms. The same model, the same question — only the
+context differs:
+
+| Arm | Setup | What it isolates |
+|---|---|---|
+| **cold** | No tools, no memory. The model answers from parametric knowledge only. | What the model knows with **no** project context — the floor. |
+| **warm** | `materialize_context` — a recency/snapshot read of the stream. | flmnt's **snapshot** retrieval tier. |
+| **rlm** | `query_context` — query-driven deep retrieval (embedding-anchored causal traversal), escalating to a graph-neighbourhood walk when the direct hit is insufficient. | flmnt's **deep-retrieval** path — what production uses. |
+| **oracle** | The correct decisions injected directly into the prompt. | The **ceiling** — proof the answer is in the stream and the model can use it when handed over directly. |
+
+The reading: **cold is the floor, oracle is the ceiling**, and warm/rlm are flmnt's two
+retrieval tiers in between. If `rlm ≈ oracle ≫ cold`, retrieval is recovering near-ceiling
+accuracy from a model that otherwise cannot answer. The **oracle** arm is the essential
+control — without it, a high warm/rlm score could mean the model already knew the answer; the
+**cold** arm rules that out.
+
+## 3. The seven packs
+
+Each pack targets a distinct memory capability. Exact seeds and probes are in
+[`CORPUS.md`](CORPUS.md).
+
+| Pack | Capability under test | Probes |
+|---|---|---|
+| **1 — Core** | foundational decision recall + premise-rejection + abstention | 15 |
+| **2 — Supersession** | decisions replaced over time — report the current one, recognize the superseded one | 5 |
+| **3 — Causal Graph** | multi-hop reasoning: problem → decision → outcome | 8 |
+| **4 — Multi-Session** | memory persisting across sessions | 6 |
+| **5 — Isolation** | project boundary — no cross-contamination between streams | 8 |
+| **6 — Hallucination Guard** | resisting fabrication (no recall probes — entirely "don't make it up") | 6 |
+| **7 — Causal Chain** | deep causal-chain reasoning | 5 |
+
+## 4. Probe types
+
+| Type | The model must… |
+|---|---|
+| **recall** | retrieve a recorded decision and its rationale |
+| **contradiction** | reject a false premise stated in the question and correct it |
+| **abstention** | admit the information is not recorded — not fabricate it |
+| **fama** | recognize a decision was superseded, not cite the stale one as current |
+
+## 5. Metrics & scoring
+
+Every answer is graded by an LLM judge (`claude-haiku-4-5`) against the probe's expected
+answer and rationale, using the per-type rubric in [`SCORING.md`](SCORING.md) (reproduced
+verbatim). Per probe:
+
+| Metric | Source | Question |
+|---|---|---|
+| **AA** — Answer Accuracy | LLM judge | Does the answer match the expected answer? *(primary metric)* |
+| **RF** — Rationale Fidelity | LLM judge | Does the stated reasoning match the recorded rationale? |
+| **CR** — Composite | derived | `(AA + RF) / 2` |
+| **sub_em** | deterministic | Substring exact-match — a judge-independent secondary signal |
+
+Each probe is run **n = 5** times per arm per model; the published value is the **median**
+across runs. Token usage — input, output, cache-read, cache-write, and retrieved context — is
+recorded per probe, the economic axis paired with accuracy.
+
+## 6. Result format
+
+[`data/latest.jsonl`](data/latest.jsonl) — one JSON object per `(probe × arm × model)`,
+median-aggregated over the five runs:
+
+```json
+{
+  "run_date": "2026-06-22", "product_version": "...",
+  "pack_id": "pack1", "probe_id": "p1-r1", "arm": "rlm",
+  "model": "claude-haiku-4-5-20251001", "judge_model": "claude-haiku-4-5-20251001",
+  "aa_score": 1.0, "rf_score": 1.0, "cr_score": 1.0, "sub_em_score": null,
+  "input_tokens": 3570, "output_tokens": 198, "cache_read_tokens": 0,
+  "cache_write_tokens": 0, "retrieved_tokens": 2741, "n_runs": 5, "probe_version": null
+}
+```
+
+## 7. Transparency boundary
+
+**Published:** every probe, every seeded decision, the verbatim judge rubric, every score, and
+the token counts ([`CORPUS.md`](CORPUS.md), [`SCORING.md`](SCORING.md),
+[`data/latest.jsonl`](data/latest.jsonl)).
+
+**Not published:** flmnt's retrieval algorithm, ranking weights, the embedding-and-traversal
+engineering, and the retrieval system prompts. The runtime never leaves flmnt's infrastructure.
+
+> **Publish the test, not the implementation.**
