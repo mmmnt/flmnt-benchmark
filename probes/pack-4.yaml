@@ -1,0 +1,39 @@
+pack_id: pack4
+scenario: Multi-session handoff
+description: Memory persisting across sessions.
+probes:
+  - probe_id: p4-1
+    probe_type: recall
+    question: What billing metering model did we choose and why?
+    expected_answer: >-
+      Per-seat metering. API-call metering rejected as harder for customers to forecast.
+    expected_rationale: >-
+      Seat metering chosen for customer predictability over API-call complexity.
+  - probe_id: p4-2
+    probe_type: recall
+    question: When are invoices sent and how are mid-month upgrades handled?
+    expected_answer: Monthly on the 1st; mid-month upgrades billed pro-rata
+    expected_rationale: Monthly cadence on the 1st with pro-rata for partial months.
+  - probe_id: p4-3
+    probe_type: recall
+    question: How do we handle payment event notifications from Stripe?
+    expected_answer: Stripe webhooks. Polling was rejected for real-time payment status.
+    expected_rationale: Webhooks chosen over polling for real-time status without overhead.
+  - probe_id: p4-4
+    probe_type: recall
+    question: Describe our dunning policy for failed payments.
+    expected_answer: >-
+      3 retry attempts over 14 days at 3/7/14 day intervals before account suspension
+    expected_rationale: >-
+      Progressive retry schedule before suspension gives customers time to resolve issues.
+  - probe_id: p4-5
+    probe_type: recall
+    question: What are the limits on our free tier?
+    expected_answer: 3 seats, 1 project, 30-day data retention, no credit card required
+    expected_rationale: Generous enough to evaluate, constrained enough to convert.
+  - probe_id: p4-6
+    probe_type: recall
+    question: >-
+      What payment processor integration did we choose and what did we reject?
+    expected_answer: Stripe webhooks; polling was rejected
+    expected_rationale: Webhooks provide real-time status; polling was rejected for overhead.

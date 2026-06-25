@@ -1,0 +1,35 @@
+pack_id: pack3
+scenario: Causal traversal
+description: 'Multi-hop causal reasoning: problem to decision to outcome.'
+decisions:
+  - id: e001
+    type: exploration
+    content: >-
+      Performance problem: API p99 latency exceeds 200ms threshold. Auth middleware running on
+      origin servers adds ~180ms per request due to JWT verification overhead.
+  - id: e002
+    type: exploration
+    caused_by: e001
+    content: >-
+      Options explored for latency reduction: (1) Edge auth via CDN — moves verification to edge
+      PoPs; (2) JWT caching — risks stale token acceptance; (3) Token pre-warming — operational
+      complexity without latency gain. Edge auth selected. CAUSED_BY: PROB-001.
+  - id: e003
+    type: decision
+    caused_by: e001
+    content: >-
+      Auth moved to Cloudflare edge workers. Eliminates origin round-trip for token verification.
+      Resolves p99 latency problem. RESOLVED_BY: PROB-001.
+  - id: e004
+    type: decision
+    caused_by: e003
+    content: >-
+      Signing algorithm: Ed25519 instead of JWT/RS256. Ed25519 verification at 0.3ms vs JWT at
+      40ms on edge workers. Performance difference justified the algorithm change. DEPENDS_ON:
+      DEC-001 (edge auth decision). CAUSED_BY: DEC-001.
+  - id: e005
+    type: decision
+    caused_by: e004
+    content: >-
+      Token validity: 15-minute signed tokens. Short expiry reduces revocation risk at edge without
+      a blocklist. CAUSED_BY: DEC-002 (Ed25519 algorithm choice).

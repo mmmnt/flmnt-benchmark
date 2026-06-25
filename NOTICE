@@ -1,0 +1,14 @@
+Quorum Benchmark
+Copyright 2026 Winnovation, Inc. All rights reserved.
+
+The methodology, probe definitions, seeding fixtures, scoring rubric, and result
+artifacts in this repository are published as transparency artifacts for the Quorum
+benchmark. They may be viewed, cited, and referenced freely.
+
+Reproduction of benchmark results requires a Quorum account and runs against Quorum's
+hosted infrastructure. The Quorum runtime is not distributed and does not leave Quorum's
+infrastructure under any circumstances.
+
+These artifacts may not be used to train machine learning models, build competing
+retrieval systems, or incorporated into products or services without the express written
+consent of Winnovation, Inc.

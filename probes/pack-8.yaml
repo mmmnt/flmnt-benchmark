@@ -1,0 +1,33 @@
+pack_id: pack8
+scenario: Structural supersession
+description: >-
+  A decision superseded with no textual staleness marker — identify the current decision via the
+  recorded supersession relationship.
+probes:
+  - probe_id: p8-1
+    probe_type: fama
+    question: >-
+      What is our primary datastore right now, and is the original choice still current?
+    expected_answer: >-
+      PostgreSQL (with JSONB) is the current system of record. The original MongoDB choice was
+      superseded and is no longer current.
+    expected_rationale: >-
+      The MongoDB decision is superseded by the PostgreSQL cutover (recorded supersession relationship).
+      The current datastore is PostgreSQL; MongoDB must not be presented as current.
+  - probe_id: p8-2
+    probe_type: contradiction
+    question: >-
+      Since MongoDB is our primary datastore, which ODM did we standardize on for document validation?
+    expected_answer: >-
+      MongoDB is not our current datastore — it was superseded by PostgreSQL with JSONB. The MongoDB/ODM
+      premise does not apply.
+    expected_rationale: >-
+      The premise assumes the superseded MongoDB decision is current. The model must reject it
+      and identify PostgreSQL as the current datastore.
+  - probe_id: p8-3
+    probe_type: recall
+    question: Which storage technology backs the service's system of record today?
+    expected_answer: PostgreSQL with JSONB columns.
+    expected_rationale: >-
+      The superseding decision names PostgreSQL with JSONB as the current system of record; it
+      is reachable only by following the recorded supersession relationship from the stale node.

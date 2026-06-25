@@ -1,0 +1,45 @@
+pack_id: pack4
+scenario: Multi-session handoff
+description: Memory persisting across sessions.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Billing metering: Per-seat granularity. API-call metering considered but rejected — seat
+      metering simpler for customers to forecast.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      Invoice timing: Monthly invoices on the 1st of each month. Pro-rata charges for mid-month
+      upgrades.
+  - id: e003
+    type: decision
+    caused_by: e002
+    content: >-
+      Payment: Stripe webhooks for payment events. Polling rejected — webhooks provide real-time
+      status without polling overhead.
+  - id: e004
+    type: decision
+    caused_by: e003
+    content: >-
+      Dunning: 3 retry attempts over 14 days before account suspension. Retry intervals: 3 days,
+      7 days, 14 days.
+  - id: e005
+    type: decision
+    caused_by: e004
+    content: >-
+      Free tier: 3 seats, 1 project, 30-day data retention. No credit card required for signup.
+  - id: e006
+    type: keyframe
+    caused_by:
+      - e001
+      - e002
+      - e003
+      - e004
+      - e005
+    content: >-
+      Session 1 summary: Five billing decisions recorded. Seat-based metering selected over API-call
+      metering. Monthly invoicing on the 1st with pro-rata for upgrades. Stripe webhooks for payment
+      events. 3-retry dunning over 14 days. Free tier: 3 seats, 1 project, 30-day retention, no
+      credit card required.

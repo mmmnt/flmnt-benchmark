@@ -1,0 +1,81 @@
+pack_id: pack3
+scenario: Causal traversal
+description: 'Multi-hop causal reasoning: problem to decision to outcome.'
+probes:
+  - probe_id: p3-1
+    probe_type: recall
+    question: What decision resolved the API latency problem?
+    expected_answer: Moving auth to Cloudflare edge workers (DEC-001)
+    expected_rationale: >-
+      Edge auth eliminates origin round-trip, resolving the 200ms p99 threshold breach.
+  - probe_id: p3-2
+    probe_type: recall
+    question: Why did we choose Ed25519 instead of JWT/RS256 at the edge?
+    expected_answer: >-
+      Ed25519 verifies in 0.3ms vs JWT's 40ms on edge workers. The performance difference justified
+      the algorithm change.
+    expected_rationale: >-
+      Ed25519 was chosen because of its verification speed advantage on edge workers (0.3ms vs
+      40ms for JWT/RS256), which was critical given we moved auth to the edge.
+  - probe_id: p3-3
+    probe_type: recall
+    question: >-
+      Trace the full decision chain from the original API latency problem through to the token
+      format decision.
+    expected_answer: >-
+      PROB-001 (p99 latency > 200ms) → DEC-001 (edge auth on Cloudflare) → DEC-002 (Ed25519 signing)
+      → DEC-003 (15-minute tokens)
+    expected_rationale: >-
+      The five-entry causal chain: latency problem caused exploration and edge auth decision,
+      edge auth caused Ed25519 selection, Ed25519 caused 15-minute token policy.
+  - probe_id: p3-4
+    probe_type: recall
+    question: >-
+      What does the Ed25519 signing algorithm decision depend on, and what did it cause?
+    expected_answer: >-
+      The Ed25519 signing decision depends on the edge auth decision (DEC-001) and caused the
+      15-minute token validity policy (DEC-003).
+    expected_rationale: >-
+      DEC-002 (Ed25519) has a DEPENDS_ON edge to DEC-001 (edge auth) and a CAUSED_BY edge; DEC-003
+      (15-min tokens) was caused by DEC-002.
+  - probe_id: p3-5
+    probe_type: abstention
+    question: What was the exact p99 latency measurement before the fix was applied?
+    expected_answer: >-
+      The exact measurement is not recorded. We know the threshold was 200ms, but the specific
+      measured value is not in the context.
+    expected_rationale: >-
+      Only the threshold (>200ms) was recorded, not the exact measurement. The model must express
+      uncertainty rather than fabricating a specific number.
+  - probe_id: p3-h1
+    probe_type: recall
+    question: >-
+      What decision was directly caused by the edge auth decision (DEC-001)? What is exactly 1
+      hop downstream from that decision?
+    expected_answer: >-
+      Ed25519 signing algorithm decision (DEC-002) — directly caused by DEC-001
+    expected_rationale: >-
+      DEC-002 (Ed25519) is exactly 1 causal hop downstream of DEC-001 (edge auth). The graph edge
+      DEC-001 → DEC-002 is a direct CAUSED_BY relationship.
+  - probe_id: p3-h2
+    probe_type: recall
+    question: >-
+      Starting from the edge auth decision (DEC-001), what decision sits exactly 2 causal hops
+      downstream — i.e., what did the decision DEC-001 ultimately trigger through one intermediate
+      step?
+    expected_answer: >-
+      The 15-minute token validity decision (DEC-003) — 2 hops from DEC-001: DEC-001 → DEC-002
+      → DEC-003
+    expected_rationale: >-
+      DEC-003 (15-minute tokens) is 2 causal hops from DEC-001: DEC-001 caused DEC-002 (Ed25519),
+      which caused DEC-003 (token validity).
+  - probe_id: p3-h3
+    probe_type: recall
+    question: >-
+      How many causal hops separate the original API latency problem (PROB-001) from the token
+      validity policy (DEC-003)? List each step in the chain.
+    expected_answer: >-
+      3 hops: PROB-001 → DEC-001 (edge auth) → DEC-002 (Ed25519) → DEC-003 (15-min tokens)
+    expected_rationale: >-
+      The chain is: PROB-001 caused DEC-001 (1 hop), DEC-001 caused DEC-002 (2 hops), DEC-002
+      caused DEC-003 (3 hops).

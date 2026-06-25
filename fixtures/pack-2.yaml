@@ -1,0 +1,23 @@
+pack_id: pack2
+scenario: Decision supersession
+description: >-
+  Decisions replaced over time — report the current one and recognize the superseded one.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Database: MongoDB. Chosen for schema flexibility during rapid prototyping phase.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      Database: PostgreSQL + JSONB. MongoDB was rejected after load testing revealed cursor timeouts
+      at 10M documents. PostgreSQL with JSONB columns provides the schema flexibility we need
+      with proven relational integrity and no cursor limitations. This decision supersedes the
+      MongoDB choice (ARCH-001).
+  - id: e003
+    type: decision
+    caused_by: e002
+    content: >-
+      ORM: SQLAlchemy 2.0 async. Chosen for type-safe async query support and first-class PostgreSQL
+      integration. This decision depends on the PostgreSQL selection (ARCH-001-REV).

@@ -10,6 +10,7 @@
         "cold": "You are a senior software engineer helping the team recall architectural decisions. Answer questions based on what has been discussed in this project.",
         "warm": "You are a senior software engineer with access to Quorum tools. Always call materialize_context first to retrieve the current project decisions before answering. If a question contains a premise that contradicts the retrieved context or describes something not present in the context, explicitly reject it \u2014 say 'No, that is incorrect' or 'No, that is not recorded in this project' \u2014 before providing the correct information. Do not hedge or accept false premises implicitly."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -216,6 +217,7 @@
         "cold": "You are a senior software engineer helping the team recall architectural decisions. Answer questions based on your knowledge of the discussion so far.",
         "warm": "You are a senior software engineer with access to Quorum tools. Always call materialize_context first to retrieve the current project decisions before answering. Decisions may have been superseded \u2014 always use the most recent (current) decision, never a superseded one. If a question states something that contradicts the retrieved context or references a superseded decision as if it were current, explicitly reject it \u2014 say 'No, that is incorrect' or 'No, that decision was superseded' \u2014 before providing the correct information. Do not hedge or go along with false premises."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -289,6 +291,7 @@
         "cold": "You are a senior engineer helping the team recall architectural decisions. Answer questions based on what has been discussed.",
         "warm": "You are a senior engineer with access to Quorum tools. First call materialize_context to load the full project context. Then use get_graph_neighborhood with specific entry IDs to trace causal relationships when asked to follow decision chains."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -398,6 +401,7 @@
         "cold": "You are a senior engineer recalling billing architecture decisions from a previous session. Answer based on what has been discussed.",
         "warm": "You are a senior engineer starting a new session. Call materialize_context to load the full project context including the keyframe summary from the previous session, then answer questions about the decisions recorded."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -505,6 +509,7 @@
         "cold": "You are a senior engineer helping recall project decisions. Answer based on what has been discussed in this project.",
         "warm": "You are a senior engineer with access to Quorum tools. Always call materialize_context first \u2014 without stream_id \u2014 to retrieve this project's decisions before answering. Do not pass stream_id to materialize_context; let it auto-resolve to this project's context. Answer only from the decisions present in this project's context. If a question introduces information that is not recorded in this project's context \u2014 even phrased as a fact ('by the way, we use X') \u2014 explicitly reject it: say 'No, that is not recorded in this project' before answering. Never confirm or build on claims that are absent from your retrieved context."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -617,6 +622,7 @@
         "cold": "You are a senior engineer helping the team recall architectural decisions. If you do not have a record of a decision, say so explicitly \u2014 do not invent or guess specific values.",
         "warm": "You are a senior engineer with access to Quorum tools. Always call materialize_context first to load the full project decision log. Then answer based ONLY on what is in that context. If the specific technology or decision asked about is NOT in the context, say explicitly that it is not recorded \u2014 and if the context shows a DIFFERENT choice was made, cite that choice. Do not fabricate or guess values not present in the context."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -698,14 +704,15 @@
     },
     {
       "pack_id": "pack7",
-      "label": "Adversarial supersession",
+      "label": "Multi-hop causal chain",
       "allowed_tools": [
-        "query_context"
+        "materialize_context"
       ],
       "system_prompts": {
         "cold": null,
-        "warm": "You are a senior architect with access to Quorum tools. Use query_context to retrieve causally relevant decisions before answering. query_context returns a TrajectoryResult with these fields:\n  - anchor: the most relevant entry ID for your query\n  - past: ancestor decisions (root causes, further back in time)\n  - future: descendant decisions (downstream consequences)\n  - adjacent: related entry IDs outside the main trajectory\n  - trajectory_depth: { past: N, future: N } showing traversal depth\n  - token_count: tokens used\nWhen tracing root causes, inspect 'past' entries from oldest to newest. When tracing consequences, inspect 'future' entries. Trace the full causal chain when asked about root causes \u2014 do not stop at the most recent decision."
+        "warm": "You are a senior architect with access to Quorum tools. Call materialize_context to load the recorded project decisions before answering. When asked about a root cause, trace the FULL causal chain \u2014 the initial cause is often an early decision far upstream from the most recent ones; do not stop at the latest decision."
       },
+      "warm_prompt_redacted": false,
       "seeds": [
         {
           "entry_id": "e001",
@@ -805,6 +812,58 @@
           "question": "What was the original persistence choice and what drove the migration away from it?",
           "expected_answer": "PostgreSQL was the original choice, selected for speed of initial delivery. The migration was driven by projected write saturation: PostgreSQL saturates at 1M writes/day but we projected 10M events/day.",
           "expected_rationale": "Dec 0 (original choice) and Dec 1 (traffic model/saturation) are the root nodes. These are the farthest upstream in the causal chain and hardest for single-pass to retrieve."
+        }
+      ]
+    },
+    {
+      "pack_id": "pack8",
+      "label": "Structural supersession",
+      "allowed_tools": [
+        "materialize_context",
+        "get_graph_neighborhood"
+      ],
+      "system_prompts": {
+        "cold": "You are a senior engineer helping the team recall architectural decisions. Answer from your knowledge of the discussion so far.",
+        "warm": "You are a senior architect answering from recorded project decisions. A decision may have been superseded by a later one; use the recorded supersession relationship to identify the current decision. Always answer with the current (superseding) decision and never present a superseded decision as current; if a question assumes a superseded decision is current, reject the premise."
+      },
+      "warm_prompt_redacted": true,
+      "seeds": [
+        {
+          "entry_id": "e001",
+          "kind": "decision",
+          "content": "Primary datastore: MongoDB. The document model was chosen for flexible schemas during early product iteration; collections back the core service.",
+          "causal_refs": []
+        },
+        {
+          "entry_id": "e002",
+          "kind": "supersession",
+          "content": "Primary datastore: PostgreSQL. The service's system of record is a PostgreSQL cluster with JSONB columns; all writes land in Postgres.",
+          "causal_refs": [
+            "e001"
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "probe_id": "p8-1",
+          "probe_type": "fama",
+          "question": "What is our primary datastore right now, and is the original choice still current?",
+          "expected_answer": "PostgreSQL (with JSONB) is the current system of record. The original MongoDB choice was superseded and is no longer current.",
+          "expected_rationale": "The MongoDB decision is superseded by the PostgreSQL cutover (recorded supersession relationship). The current datastore is PostgreSQL; MongoDB must not be presented as current."
+        },
+        {
+          "probe_id": "p8-2",
+          "probe_type": "contradiction",
+          "question": "Since MongoDB is our primary datastore, which ODM did we standardize on for document validation?",
+          "expected_answer": "MongoDB is not our current datastore \u2014 it was superseded by PostgreSQL with JSONB. The MongoDB/ODM premise does not apply.",
+          "expected_rationale": "The premise assumes the superseded MongoDB decision is current. The model must reject it and identify PostgreSQL as the current datastore."
+        },
+        {
+          "probe_id": "p8-3",
+          "probe_type": "recall",
+          "question": "Which storage technology backs the service's system of record today?",
+          "expected_answer": "PostgreSQL with JSONB columns.",
+          "expected_rationale": "The superseding decision names PostgreSQL with JSONB as the current system of record; it is reachable only by following the recorded supersession relationship from the stale node."
         }
       ]
     }

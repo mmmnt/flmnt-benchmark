@@ -4,7 +4,7 @@ This is the complete, exact input to every benchmark run: the decisions seeded i
 
 Generated offline from the scenario packs — no model or network involved.
 
-**7 packs · 41 seeded entries · 53 probes**
+**8 packs · 43 seeded entries · 56 probes**
 
 ## pack1 — Core context recovery
 
@@ -324,16 +324,9 @@ Generated offline from the scenario packs — no model or network involved.
   - **Expected:** API versioning strategy not recorded. No versioning decision was made in the recorded project decisions.
   - **Rationale:** No versioning decision was seeded. Model must admit the absence rather than guess.
 
-## pack7 — Adversarial supersession
+## pack7 — Multi-hop causal chain
 
-> **System prompt (with memory):** You are a senior architect with access to Quorum tools. Use query_context to retrieve causally relevant decisions before answering. query_context returns a TrajectoryResult with these fields:
-  - anchor: the most relevant entry ID for your query
-  - past: ancestor decisions (root causes, further back in time)
-  - future: descendant decisions (downstream consequences)
-  - adjacent: related entry IDs outside the main trajectory
-  - trajectory_depth: { past: N, future: N } showing traversal depth
-  - token_count: tokens used
-When tracing root causes, inspect 'past' entries from oldest to newest. When tracing consequences, inspect 'future' entries. Trace the full causal chain when asked about root causes — do not stop at the most recent decision.
+> **System prompt (with memory):** You are a senior architect with access to Quorum tools. Call materialize_context to load the recorded project decisions before answering. When asked about a root cause, trace the FULL causal chain — the initial cause is often an early decision far upstream from the most recent ones; do not stop at the latest decision.
 
 ### Seeded decisions (8)
 
@@ -376,3 +369,29 @@ When tracing root causes, inspect 'past' entries from oldest to newest. When tra
   - **Q:** What was the original persistence choice and what drove the migration away from it?
   - **Expected:** PostgreSQL was the original choice, selected for speed of initial delivery. The migration was driven by projected write saturation: PostgreSQL saturates at 1M writes/day but we projected 10M events/day.
   - **Rationale:** Dec 0 (original choice) and Dec 1 (traffic model/saturation) are the root nodes. These are the farthest upstream in the causal chain and hardest for single-pass to retrieve.
+
+## pack8 — Structural supersession
+
+> **System prompt (capability summary — the verbatim retrieval-handling prompt is withheld):** You are a senior architect answering from recorded project decisions. A decision may have been superseded by a later one; use the recorded supersession relationship to identify the current decision. Always answer with the current (superseding) decision and never present a superseded decision as current; if a question assumes a superseded decision is current, reject the premise.
+
+### Seeded decisions (2)
+
+- **`e001`** (decision)
+  > Primary datastore: MongoDB. The document model was chosen for flexible schemas during early product iteration; collections back the core service.
+- **`e002`** (supersession)  ·  supersedes e001
+  > Primary datastore: PostgreSQL. The service's system of record is a PostgreSQL cluster with JSONB columns; all writes land in Postgres.
+
+### Probe questions (3)
+
+- **p8-1** · _fama_
+  - **Q:** What is our primary datastore right now, and is the original choice still current?
+  - **Expected:** PostgreSQL (with JSONB) is the current system of record. The original MongoDB choice was superseded and is no longer current.
+  - **Rationale:** The MongoDB decision is superseded by the PostgreSQL cutover (recorded supersession relationship). The current datastore is PostgreSQL; MongoDB must not be presented as current.
+- **p8-2** · _contradiction_
+  - **Q:** Since MongoDB is our primary datastore, which ODM did we standardize on for document validation?
+  - **Expected:** MongoDB is not our current datastore — it was superseded by PostgreSQL with JSONB. The MongoDB/ODM premise does not apply.
+  - **Rationale:** The premise assumes the superseded MongoDB decision is current. The model must reject it and identify PostgreSQL as the current datastore.
+- **p8-3** · _recall_
+  - **Q:** Which storage technology backs the service's system of record today?
+  - **Expected:** PostgreSQL with JSONB columns.
+  - **Rationale:** The superseding decision names PostgreSQL with JSONB as the current system of record; it is reachable only by following the recorded supersession relationship from the stale node.

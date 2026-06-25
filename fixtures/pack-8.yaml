@@ -1,0 +1,17 @@
+pack_id: pack8
+scenario: Structural supersession
+description: >-
+  A decision superseded with no textual staleness marker — identify the current decision via the
+  recorded supersession relationship.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Primary datastore: MongoDB. The document model was chosen for flexible schemas during early
+      product iteration; collections back the core service.
+  - id: e002
+    type: supersession
+    supersedes: e001
+    content: >-
+      Primary datastore: PostgreSQL. The service's system of record is a PostgreSQL cluster with
+      JSONB columns; all writes land in Postgres.

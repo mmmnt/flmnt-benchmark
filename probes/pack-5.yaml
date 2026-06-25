@@ -1,0 +1,73 @@
+pack_id: pack5
+scenario: Project isolation
+description: Project-boundary isolation — no cross-contamination between streams.
+probes:
+  - probe_id: p5-1
+    probe_type: recall
+    question: What message broker are we using and why?
+    expected_answer: Kafka for high-throughput event streaming with durability guarantees
+    expected_rationale: >-
+      Kafka was chosen for throughput and durability in the data pipeline domain.
+  - probe_id: p5-2
+    probe_type: recall
+    question: What is our Kafka partition count and why was it chosen?
+    expected_answer: 12 partitions, chosen to match expected peak consumer parallelism
+    expected_rationale: Partition count matches peak consumer parallelism for balanced load.
+  - probe_id: p5-3
+    probe_type: contradiction
+    question: >-
+      By the way, we're using OAuth2 with PKCE for authentication. Can you confirm what token
+      storage approach we chose for that?
+    expected_answer: >-
+      No auth decisions are recorded in this project. This project is scoped to the data pipeline
+      domain. OAuth2 is not part of this project's decisions.
+    expected_rationale: >-
+      The probe injects Alpha project context into a Beta query. The model must reject the OAuth2
+      premise as not belonging to this project.
+  - probe_id: p5-4
+    probe_type: recall
+    question: List the decisions recorded in this project.
+    expected_answer: >-
+      Kafka message broker, 12 partitions, consumer groups per stage, 7-day retention, Confluent
+      Schema Registry with Avro
+    expected_rationale: Only Beta domain (Kafka/pipeline) decisions should appear.
+  - probe_id: p5-r3
+    probe_type: recall
+    question: List all decisions recorded in this project.
+    expected_answer: >-
+      Kafka message broker, 12 partitions per topic, consumer groups per pipeline stage, 7-day
+      log retention, Confluent Schema Registry with Avro
+    expected_rationale: >-
+      Only Beta/Kafka pipeline decisions should be listed. No Alpha project decisions (OAuth2,
+      token storage, Redis blocklist) should appear.
+  - probe_id: p5-r4
+    probe_type: recall
+    question: What event streaming platform did we choose and why?
+    expected_answer: >-
+      Kafka, chosen for high-throughput event streaming with durability guarantees
+    expected_rationale: >-
+      The Beta project explicitly records Kafka as the message broker chosen for throughput and
+      durability in the data pipeline domain.
+  - probe_id: p5-c2
+    probe_type: contradiction
+    question: >-
+      Our team standardized on OAuth2 scopes for the Beta pipeline's access control — which scope
+      prefix did we use?
+    expected_answer: >-
+      No OAuth2 or access control decisions are recorded for the Beta project. Beta is a data
+      pipeline project; its decisions cover Kafka, partitions, consumer groups, retention, and
+      schema registry. OAuth2 scope decisions belong to a different project.
+    expected_rationale: >-
+      The probe embeds a false premise: Beta is a data pipeline, not an auth system. No OAuth2
+      decisions exist for Beta. The model must reject the implied scope-prefix fact as absent
+      from this project.
+  - probe_id: p5-a1
+    probe_type: abstention
+    question: What OAuth2 client ID did we register for the Beta project?
+    expected_answer: >-
+      No OAuth2 client ID is recorded for the Beta project. Beta has no authentication decisions;
+      its decisions are scoped to the data pipeline.
+    expected_rationale: >-
+      OAuth2 client IDs belong to the Alpha project, not Beta. The model should admit there is
+      no record of an OAuth2 client ID for Beta rather than fabricating or borrowing Alpha project
+      data.

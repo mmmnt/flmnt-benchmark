@@ -1,0 +1,53 @@
+pack_id: pack7
+scenario: Multi-hop causal chain
+description: Deep causal-chain reasoning across a multi-step chain.
+probes:
+  - probe_id: p7-1
+    probe_type: recall
+    question: Why did we switch away from PostgreSQL?
+    expected_answer: >-
+      Write saturation: PostgreSQL benchmarks saturate at 1M writes/day but we projected 10M events/day.
+      Read replicas helped reads but the write bottleneck persisted. Horizontal sharding was rejected
+      as too complex.
+    expected_rationale: >-
+      Full causal chain required: initial PostgreSQL choice → traffic projection → write saturation
+      → sharding rejection → EventStoreDB adoption.
+  - probe_id: p7-2
+    probe_type: recall
+    question: What is our accepted consistency model and what caused us to adopt it?
+    expected_answer: >-
+      Eventual consistency, caused by EventStoreDB's append-only replication semantics. Read consumers
+      tolerate up to 500ms lag.
+    expected_rationale: >-
+      Consistency model decision (Dec 6) caused directly by EventStoreDB selection (Dec 5), which
+      itself was caused by the PostgreSQL write saturation chain.
+  - probe_id: p7-3
+    probe_type: recall
+    question: >-
+      Trace the root cause of our eventual consistency decision back to the initial technology
+      choice.
+    expected_answer: >-
+      Root cause: Initial PostgreSQL selection prioritized delivery speed over scalability. Chain:
+      PostgreSQL → write saturation at 1M/day → sharding too complex → EventStoreDB adopted →
+      eventual consistency accepted.
+    expected_rationale: >-
+      Full 8-step causal chain must be retrieved. Single-pass materialization returns only recent
+      entries (Dec 4-7) and misses the root cause (Dec 0: initial PostgreSQL choice).
+  - probe_id: p7-4
+    probe_type: recall
+    question: Why was Cassandra rejected as an alternative?
+    expected_answer: Complex cross-DC consistency semantics for our use case.
+    expected_rationale: >-
+      Cassandra rejection (Dec 4) is a mid-chain decision that would be missed if only the most
+      recent 3-4 entries are retrieved.
+  - probe_id: p7-5
+    probe_type: recall
+    question: >-
+      What was the original persistence choice and what drove the migration away from it?
+    expected_answer: >-
+      PostgreSQL was the original choice, selected for speed of initial delivery. The migration
+      was driven by projected write saturation: PostgreSQL saturates at 1M writes/day but we projected
+      10M events/day.
+    expected_rationale: >-
+      Dec 0 (original choice) and Dec 1 (traffic model/saturation) are the root nodes. These are
+      the farthest upstream in the causal chain and hardest for single-pass to retrieve.

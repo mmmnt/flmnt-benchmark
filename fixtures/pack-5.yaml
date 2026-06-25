@@ -1,0 +1,34 @@
+pack_id: pack5
+scenario: Project isolation
+description: Project-boundary isolation — no cross-contamination between streams.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Message broker: Kafka. Chosen for high-throughput event streaming with durability guarantees.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      Partition count: 12 partitions per topic to match expected peak consumer parallelism.
+  - id: e003
+    type: decision
+    caused_by:
+      - e001
+      - e002
+    content: >-
+      Consumer groups: One consumer group per pipeline stage for independent offset tracking.
+  - id: e004
+    type: decision
+    caused_by:
+      - e002
+      - e003
+    content: >-
+      Retention: 7-day log retention for replay capability during incident recovery.
+  - id: e005
+    type: decision
+    caused_by:
+      - e003
+      - e004
+    content: >-
+      Schema registry: Confluent Schema Registry with Avro for backward-compatible schema evolution.

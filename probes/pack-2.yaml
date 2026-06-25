@@ -1,0 +1,48 @@
+pack_id: pack2
+scenario: Decision supersession
+description: >-
+  Decisions replaced over time — report the current one and recognize the superseded one.
+probes:
+  - probe_id: p2-1
+    probe_type: recall
+    question: What database are we using and why?
+    expected_answer: PostgreSQL with JSONB columns
+    expected_rationale: >-
+      MongoDB was rejected due to cursor timeouts at 10M documents during load testing. PostgreSQL
+      provides schema flexibility via JSONB with proven reliability.
+  - probe_id: p2-2
+    probe_type: fama
+    question: >-
+      Earlier we discussed MongoDB as our database. Is MongoDB still the plan, or have we moved
+      to something else?
+    expected_answer: >-
+      No, MongoDB was replaced by PostgreSQL + JSONB. The MongoDB decision was superseded after
+      load testing failures.
+    expected_rationale: >-
+      MongoDB is the superseded decision. The current decision is PostgreSQL + JSONB. The model
+      must not present MongoDB as current.
+  - probe_id: p2-3
+    probe_type: recall
+    question: Why did we move away from our original database choice?
+    expected_answer: Cursor timeouts at 10 million documents during load testing
+    expected_rationale: >-
+      The specific failure mode that triggered the switch was cursor timeouts at 10M documents,
+      discovered during load testing.
+  - probe_id: p2-4
+    probe_type: recall
+    question: Which ORM are we using and what does it depend on?
+    expected_answer: SQLAlchemy 2.0 async, which depends on the PostgreSQL decision
+    expected_rationale: >-
+      SQLAlchemy 2.0 async was chosen for type-safe async support. It depends on the PostgreSQL
+      + JSONB database decision.
+  - probe_id: p2-5
+    probe_type: contradiction
+    question: >-
+      Since we settled on MongoDB as our database, which version of Mongoose did we standardize
+      on for the ORM layer?
+    expected_answer: >-
+      We are not using MongoDB. The current database is PostgreSQL + JSONB. Mongoose is a MongoDB
+      ORM and does not apply to our stack.
+    expected_rationale: >-
+      The premise is false. MongoDB was rejected. PostgreSQL + JSONB is the current database.
+      The model must reject the MongoDB assumption explicitly.

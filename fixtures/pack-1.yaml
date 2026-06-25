@@ -1,0 +1,80 @@
+pack_id: pack1
+scenario: Core context recovery
+description: Foundational decision recall, premise-rejection, and abstention.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Cache: Redis as primary cache. PostgreSQL is the audit-only persistence layer. Redis chosen
+      for sub-millisecond reads at high throughput.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      Auth: Ed25519 asymmetric keys for tenant verification. JWT considered but rejected — Ed25519
+      verification at edge is 0.3ms vs JWT at 40ms. Ed25519 keys also shorter.
+  - id: e003
+    type: decision
+    caused_by:
+      - e001
+      - e002
+    content: >-
+      Rate limiting: Sliding window counter in Redis. Token bucket rejected for enforcement unpredictability;
+      leaky bucket rejected for burst suppression issues. Sliding window provides predictable
+      enforcement with burst tolerance.
+  - id: e004
+    type: decision
+    caused_by:
+      - e002
+      - e003
+    content: >-
+      Observability: OpenTelemetry SDK with Jaeger as tracing backend. No vendor lock-in; Jaeger
+      supports distributed trace correlation natively.
+  - id: e005
+    type: decision
+    caused_by:
+      - e003
+      - e004
+    content: >-
+      Deployment: Multi-region active-passive. Primary region handles all writes; passive regions
+      serve reads only. Failover is manual initially, automated in Q3.
+  - id: e006
+    type: decision
+    caused_by:
+      - e004
+      - e005
+    content: >-
+      CDN: Cloudflare for static assets and API edge caching. Cache-Control headers enforce 5-minute
+      TTL on non-personalized responses.
+  - id: e007
+    type: decision
+    caused_by:
+      - e005
+      - e006
+    content: >-
+      Free tier: Hard cap at 10,000 API calls per month. Overage blocked, not throttled — prevents
+      surprise billing for free users.
+  - id: e008
+    type: decision
+    caused_by:
+      - e006
+      - e007
+    content: >-
+      Database: PostgreSQL 16 with TimescaleDB extension for time-series data. TimescaleDB chosen
+      over InfluxDB for SQL compatibility and single-service simplicity.
+  - id: e009
+    type: decision
+    caused_by:
+      - e007
+      - e008
+    content: >-
+      API versioning: URL path versioning (/v1/, /v2/). Header versioning rejected — caching layers
+      cannot vary by header without significant config complexity.
+  - id: e010
+    type: decision
+    caused_by:
+      - e008
+      - e009
+    content: >-
+      Background jobs: BullMQ on Redis. Celery considered but rejected due to Python runtime dependency
+      mismatch. BullMQ native to Node.js stack.

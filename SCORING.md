@@ -3,7 +3,8 @@
 Every probe answer is graded by an LLM judge (`claude-haiku-4-5`). For each probe the judge
 receives the model's response, the probe's expected answer and expected rationale, and the
 rubric for that probe's type. It returns two scores in `[0.0, 1.0]`: `answer` (Answer
-Accuracy) and `rationale` (Rationale Fidelity).
+Accuracy) and `rationale` (Rationale Fidelity). The judge is not told which arm produced the
+response; the same per-type rubric below is applied identically to every arm, including `flat`.
 
 The strings below are reproduced **verbatim** from the scoring function — the exact criteria
 used to produce every number in [`data/latest.jsonl`](data/latest.jsonl). Nothing is

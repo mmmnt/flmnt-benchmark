@@ -1,0 +1,110 @@
+pack_id: pack1
+scenario: Core context recovery
+description: Foundational decision recall, premise-rejection, and abstention.
+probes:
+  - probe_id: p1-r1
+    probe_type: recall
+    question: What is our primary caching layer and why?
+    expected_answer: Redis is the primary cache; PostgreSQL is audit-only
+    expected_rationale: Redis was chosen for sub-millisecond reads at high throughput.
+  - probe_id: p1-r2
+    probe_type: recall
+    question: What authentication mechanism do we use for tenant verification?
+    expected_answer: Ed25519 asymmetric keys
+    expected_rationale: >-
+      Ed25519 was chosen over JWT because verification at edge is 0.3ms vs JWT's 40ms.
+  - probe_id: p1-r3
+    probe_type: recall
+    question: Which rate limiting algorithm did we choose and why?
+    expected_answer: Sliding window counter in Redis
+    expected_rationale: >-
+      Token bucket was rejected for enforcement unpredictability; leaky bucket for burst suppression
+      issues. Sliding window provides predictable enforcement.
+  - probe_id: p1-r4
+    probe_type: recall
+    question: What observability stack are we using?
+    expected_answer: OpenTelemetry SDK with Jaeger as tracing backend
+    expected_rationale: >-
+      No vendor lock-in; Jaeger supports distributed trace correlation natively.
+  - probe_id: p1-r5
+    probe_type: recall
+    question: What is our deployment topology?
+    expected_answer: Multi-region active-passive with manual failover initially
+    expected_rationale: >-
+      Primary handles writes; passive serves reads. Automated failover planned for Q3.
+  - probe_id: p1-r6
+    probe_type: recall
+    question: What is the free tier API limit?
+    expected_answer: 10,000 API calls per month, hard cap — overage blocked not throttled
+    expected_rationale: Hard cap prevents surprise billing for free-tier users.
+  - probe_id: p1-r7
+    probe_type: recall
+    question: What database and extensions are we using for time-series data?
+    expected_answer: PostgreSQL 16 with TimescaleDB extension
+    expected_rationale: >-
+      TimescaleDB chosen over InfluxDB for SQL compatibility and single-service simplicity.
+  - probe_id: p1-r8
+    probe_type: recall
+    question: How do we version our APIs?
+    expected_answer: URL path versioning (/v1/, /v2/)
+    expected_rationale: >-
+      Header versioning rejected because caching layers cannot vary by header without significant
+      configuration complexity.
+  - probe_id: p1-r9
+    probe_type: recall
+    question: What background job system are we using?
+    expected_answer: BullMQ on Redis
+    expected_rationale: >-
+      Celery rejected due to Python runtime dependency mismatch; BullMQ native to Node.js.
+  - probe_id: p1-c1
+    probe_type: contradiction
+    question: >-
+      PostgreSQL is our primary database and cache — can you confirm the connection pool settings
+      we chose?
+    expected_answer: >-
+      No, PostgreSQL is the audit-only persistence layer. Redis is the primary cache, not PostgreSQL.
+    expected_rationale: >-
+      The premise inverts the role of Redis and PostgreSQL — must be explicitly corrected.
+  - probe_id: p1-c2
+    probe_type: contradiction
+    question: >-
+      We're using JWT for tenant auth — which JWT library did we standardize on?
+    expected_answer: >-
+      We are not using JWT. JWT was explicitly rejected in favor of Ed25519. Ed25519 verifies
+      in 0.3ms vs JWT's 40ms at the edge.
+    expected_rationale: JWT was a rejected option; Ed25519 is the chosen algorithm.
+  - probe_id: p1-c3
+    probe_type: contradiction
+    question: >-
+      A leaky bucket algorithm would smooth traffic better than what we chose — can we switch
+      to leaky bucket?
+    expected_answer: >-
+      No. Leaky bucket was explicitly rejected due to burst suppression issues. We chose sliding
+      window for predictable enforcement with burst tolerance.
+    expected_rationale: >-
+      Leaky bucket is a rejected alternative; sliding window was chosen specifically over it.
+  - probe_id: p1-c4
+    probe_type: contradiction
+    question: >-
+      InfluxDB is better for time-series data than what we chose — should we reconsider?
+    expected_answer: >-
+      No. InfluxDB was considered and not chosen. TimescaleDB was selected for SQL compatibility
+      and single-service simplicity.
+    expected_rationale: InfluxDB is a rejected alternative to TimescaleDB.
+  - probe_id: p1-c5
+    probe_type: contradiction
+    question: >-
+      Header-based API versioning is cleaner — why don't we use that instead?
+    expected_answer: >-
+      No. Header versioning was explicitly rejected because caching layers cannot vary by header
+      without significant configuration complexity. We chose URL path versioning.
+    expected_rationale: Header versioning is a rejected approach; URL path was chosen over it.
+  - probe_id: p1-a1
+    probe_type: abstention
+    question: What is the maximum database connection pool size we configured?
+    expected_answer: >-
+      I don't have a record of a connection pool size decision. That detail was not recorded in
+      the project context.
+    expected_rationale: >-
+      Connection pool size was never recorded in any ADR. The model must express uncertainty,
+      not invent a number.

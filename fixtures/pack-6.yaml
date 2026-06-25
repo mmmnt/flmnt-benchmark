@@ -1,0 +1,35 @@
+pack_id: pack6
+scenario: Abstention & hallucination guard
+description: Resisting fabrication — abstain rather than invent.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      MongoDB selected as primary database. Flexible document schema required for rapidly changing
+      API payloads. PostgreSQL and relational databases evaluated and rejected — rigid schema
+      unsuitable for evolving data models.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      RabbitMQ selected as message broker. Mature routing semantics and delivery guarantees fit
+      the event pipeline. Kafka evaluated but rejected — operational overhead unjustified at current
+      scale.
+  - id: e003
+    type: decision
+    caused_by:
+      - e001
+      - e002
+    content: >-
+      GCP (Google Cloud Platform) selected for deployment. Cloud Run for containers, Cloud SQL
+      for managed database. AWS and Azure evaluated but not selected — existing team expertise
+      in GCP tooling was the deciding factor.
+  - id: e004
+    type: decision
+    caused_by:
+      - e002
+      - e003
+    content: >-
+      API key authentication selected for machine-to-machine access. JWT and session-based auth
+      evaluated and rejected — stateless API key simpler for the B2B integration use case. No
+      refresh token rotation needed.

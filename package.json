@@ -1,0 +1,16 @@
+{
+	"name": "quorum-benchmark",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@10.33.0",
+	"engines": {
+		"node": ">=22.13.0"
+	},
+	"scripts": {
+		"claude:session": "npx @dotenvx/dotenvx run -f .env.${ENVIRONMENT:-local} -- npx -y @anthropic-ai/claude-code"
+	},
+	"devDependencies": {
+		"@dotenvx/dotenvx": "^1.66.0"
+	}
+}

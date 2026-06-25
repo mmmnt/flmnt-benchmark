@@ -1,0 +1,51 @@
+pack_id: pack7
+scenario: Multi-hop causal chain
+description: Deep causal-chain reasoning across a multi-step chain.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      Initial stack: PostgreSQL chosen for persistence. Speed of initial delivery prioritized
+      over scalability.
+  - id: e002
+    type: decision
+    caused_by: e001
+    content: >-
+      Traffic model: Projected 10M events/day within 12 months. PostgreSQL benchmarks saturate
+      at 1M writes/day.
+  - id: e003
+    type: decision
+    caused_by: e002
+    content: >-
+      Read/write ratio: 95% reads, 5% writes. Read replicas added to PostgreSQL; write bottleneck
+      persists.
+  - id: e004
+    type: decision
+    caused_by: e003
+    content: >-
+      Sharding evaluated: PostgreSQL horizontal sharding rejected — complexity exceeds team capacity
+      to maintain.
+  - id: e005
+    type: decision
+    caused_by: e004
+    content: >-
+      Alternatives evaluated: Cassandra rejected due to complex cross-DC consistency semantics
+      for our use case.
+  - id: e006
+    type: decision
+    caused_by: e005
+    content: >-
+      EventStoreDB selected: Append-only event log with high write throughput. Replaces PostgreSQL
+      as primary store.
+  - id: e007
+    type: decision
+    caused_by: e006
+    content: >-
+      Consistency model: Eventual consistency accepted. Caused by EventStoreDB append-only replication
+      semantics.
+  - id: e008
+    type: decision
+    caused_by: e007
+    content: >-
+      Downstream impact: All read consumers updated to tolerate eventual consistency lag up to
+      500ms.
