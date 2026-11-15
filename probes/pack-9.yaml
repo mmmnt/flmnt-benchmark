@@ -1,0 +1,34 @@
+pack_id: pack9
+scenario: Unkeyed structural supersession
+description: >-
+  A decision superseded where the two texts share no named attribute frame and neither text marks
+  that a change happened — identify the current decision via the recorded supersession
+  relationship.
+probes:
+  - probe_id: p9-1
+    probe_type: fama
+    question: Where does the billing service keep its order and invoice data?
+    expected_answer: >-
+      In a PostgreSQL cluster, with variable-shape fields in JSONB columns. The MongoDB decision was
+      superseded and is not current.
+    expected_rationale: >-
+      The MongoDB decision is superseded by the PostgreSQL decision (recorded supersession
+      relationship). The current store is PostgreSQL; MongoDB must not be presented as current.
+  - probe_id: p9-2
+    probe_type: contradiction
+    question: >-
+      Since billing writes its orders to MongoDB collections, which ODM did we standardize on for
+      document validation?
+    expected_answer: >-
+      Billing does not write to MongoDB — the MongoDB decision was superseded by PostgreSQL with
+      JSONB columns. The MongoDB/ODM premise does not apply.
+    expected_rationale: >-
+      The premise assumes the superseded MongoDB decision is current. The model must reject it and
+      identify PostgreSQL as the current store.
+  - probe_id: p9-3
+    probe_type: recall
+    question: Which database engine does the billing service use?
+    expected_answer: PostgreSQL, with JSONB columns for variable-shape fields.
+    expected_rationale: >-
+      The superseding decision names PostgreSQL with JSONB columns as the billing store; it is
+      reachable only by following the recorded supersession relationship from the stale node.

@@ -1,0 +1,18 @@
+pack_id: pack9
+scenario: Unkeyed structural supersession
+description: >-
+  A decision superseded where the two texts share no named attribute frame and neither text marks
+  that a change happened — identify the current decision via the recorded supersession
+  relationship.
+decisions:
+  - id: e001
+    type: decision
+    content: >-
+      MongoDB was chosen for the billing service because the document model lets order and invoice
+      shapes change from week to week; each collection maps to one resource.
+  - id: e002
+    type: supersession
+    supersedes: e001
+    content: >-
+      Billing commits every order and invoice write to a PostgreSQL cluster; fields whose shape
+      varies sit in JSONB columns beside the typed ones.
